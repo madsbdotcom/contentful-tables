@@ -50,27 +50,36 @@
         color: #1a202c;
         font-size: 1rem;
         padding: 0;
+        height: 1px;
       }
 
       tr:first-child td input {
         font-weight: bold;
-        text-align: center;
       }
 
+      td textarea,
       td input {
         border: none;
         color: #1a202c;
         font-size: 1rem;
         line-height: 1.5;
         padding: 0.5rem 1rem;
-        text-align: center;
         width: 100%;
+        height: 100%;
+      }
+
+      td textarea {
+        box-sizing: border-box;
+        resize: none;
+        border-top: 1px solid #cbd5e0;
       }
 
       input:hover {
+      textarea:hover {
         background-color: #f7fafc;
       }
       input:focus {
+      textarea:focus {
         background-color: #e2e8f0;
       }
     </style>
@@ -130,9 +139,18 @@
           let row = elem.insertRow();
 
           for (let j = 0; j < tableData[0].length; j++) {
-            row.insertCell().innerHTML = `<input data-row="${i}" data-column="${j}" value="${tableData[
-              i
-            ][j] || ""}"/>`;
+            if (i === 0) {
+              row.insertCell().innerHTML = `<input data-row="${i}" data-column="${j}" value="${tableData[
+                i
+              ][j] || ""}"/>`;
+            } else {
+              const id = `ta${i}-${j}`;
+              row.insertCell().innerHTML = `<textarea id="${id}" class="table-textarea" data-row="${i}" data-column="${j}">${tableData[i][j] || ""}</textarea>`;
+              // Trigger textarea initial height
+              setTimeout(() => {
+                document.getElementById(id).dispatchEvent(new Event('input', {bubbles:true}));
+              }, 10);
+            }
           }
         }
       }
@@ -197,9 +215,19 @@
           "change",
           e => {
             if (e.target.classList.contains("size-input")) return false;
-            value.tableData[e.target.dataset.row][e.target.dataset.column] =
-              e.target.value;
+            value.tableData[e.target.dataset.row][e.target.dataset.column] = e.target.value;
             extension.field.setValue(value);
+          },
+          true
+        );
+
+        window.addEventListener(
+          "input",
+          e => {
+            if (e.target.classList.contains("table-textarea")) {
+              e.target.setAttribute("style", "min-height:" + (e.target.scrollHeight - 2) + "px;overflow-y:hidden;");
+              extension.window.updateHeight();
+            }
           },
           true
         );
